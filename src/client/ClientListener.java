@@ -70,7 +70,7 @@ public class ClientListener implements Runnable {
                 }
                 running = false;
             } else {
-                String[] fields = message.split("|");
+                String[] fields = message.split(";");
                 
                 if(fields.length > 1) {
                     if(fields[0].equals("OPEN_CHAT")) {
@@ -84,6 +84,17 @@ public class ClientListener implements Runnable {
                             chat = new Chat(home, connection, connection_info, home.getConnection_info());
                         }
                     }
+                } else if(fields[0].equals("MESSAGE")) {
+                    String msg = "";
+                    
+                    for(int i = 0; i < fields.length; i++) {
+                        msg += fields[i];
+                        
+                        if(i > 1) {
+                            msg += ";";
+                        }
+                    }
+                    chat.append_message(msg);
                 }
             }
             System.out.println(">> Mensagem: " + message);

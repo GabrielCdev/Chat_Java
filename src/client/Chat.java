@@ -1,5 +1,6 @@
 package client;
 
+import common.Utils;
 import javax.swing.*;
 import java.util.*;
 import java.awt.*;
@@ -66,19 +67,57 @@ public class Chat extends JFrame {
     private void insertActions() {
         jb_message.addActionListener(event -> send());
         jt_message.addKeyListener(new KeyListener() {  
+            @Override
             public void keyTyped(KeyEvent e) {
 
             }
             
+            @Override
             public void keyPressed(KeyEvent e) {
                 if(e.getKeyChar() == KeyEvent.VK_ENTER) {
                     send();
                 }
             }
 
+            @Override
             public void keyReleased(KeyEvent e) {
                 
             }
+        });
+        this.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                Utils.sendMessage(connection, "CHAT_CLOSE");
+                home.getOpened_chats().remove(connection_info);
+                home.getConnected_listeners().remove(connection_info).setChatOpen(false);
+                home.getConnected_listeners().get(connection_info).setRunning(false);
+                home.getConnected_listeners().remove(connection_info);
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+            }
+            
         });
     }
 
@@ -96,6 +135,7 @@ public class Chat extends JFrame {
     private void send() {
         if(jt_message.getText().length() > 0) {
             DateFormat df = new SimpleDateFormat("hh:mm:ss");
+            Utils.sendMessage(connection, "MESSAGE;" + "<b>[" + df.format(new Date()) + "] " + connection_info.split(":")[0] +  ": </b><i>" + jt_message.getText() + "</i><br>");
             append_message("<b>[" + df.format(new Date()) + "] Eu: </b><i>" + jt_message.getText() + "</i><br>");
             jt_message.setText("");
         }

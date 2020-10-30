@@ -166,7 +166,7 @@ public class Home extends JFrame {
             if(!opened_chats.contains(connection_info)) {
                 try {
                     Socket connection = new Socket(splited[1], Integer.parseInt(splited[2]));
-                    Utils.sendMessage(connection, "OPEN CHAT!" + this.connection_info);
+                    Utils.sendMessage(connection, "OPEN CHAT;" + this.connection_info);
                     ClientListener cl = new ClientListener(this, connection);
                     cl.setChat(new Chat(this, connection, connection_info, this.connection_info.split(":")[0]));
                     cl.setChatOpen(true);
