@@ -39,11 +39,11 @@ public class ClientListener implements Runnable {
                 System.out.println("Atualize a lista de contatos...");
                 String response = "";
                 
-                for(Map<K, V>.Entry<String, ClientListener> pair: server.getClients().entrySet()) {
+                for(Map.Entry<String, ClientListener> pair : server.getClients().entrySet()) {
                     response += (pair.getKey() + ";");
                 }
 
-                Utils.send(connection, response);
+                Utils.sendMessage(connection, response);
             } else {
                 System.out.println("Recebido: " + message);
             }

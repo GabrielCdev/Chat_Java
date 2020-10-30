@@ -10,7 +10,7 @@ import java.util.Map;
 public class Server {
 
     public static final String HOST = "127.0.0.1";
-    public static final int PORT = 4444;
+    public static final int PORT = 3000;
 
     private ServerSocket server;
     private Map<String, ClientListener> clients;
@@ -32,7 +32,7 @@ public class Server {
                     Utils.sendMessage(connection, "SUCCESS!!!");
                     new Thread(cl).start();
                 } else {
-                    Utils.sendMessage(connection, "ERROR!")
+                    Utils.sendMessage(connection, "ERROR!");
                 }
             }
 
@@ -48,7 +48,7 @@ public class Server {
     private boolean checkLogin(String connection_info) {
         String[] splitted = connection_info.split(":");
 
-        for(Map, Entry<String, ClientListener> pair: clients.entrySet()) {
+        for(Map.Entry<String, ClientListener> pair: clients.entrySet()) {
             String[] parts = pair.getKey().split(":");
 
             if(parts[0].toLowerCase().equals(splitted[0].toLowerCase())) {
@@ -58,5 +58,9 @@ public class Server {
             }
         } 
         return true;
+    }
+    
+    public static void main(String[] args) {
+        Server server = new Server();
     }
 }

@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-class Utils {
+public class Utils {
 
     public static boolean sendMessage(Socket connection, String message) {
         try{

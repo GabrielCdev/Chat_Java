@@ -39,7 +39,7 @@ class Login extends JFrame {
         this.getContentPane().setBackground(Color.WHITE);
         
         jl_title.setBounds(10, 10, 375, 100);
-        ImageIcon icon = new ImageIcon("../logo.png");
+        ImageIcon icon = new ImageIcon("logo.png");
         jl_title.setIcon(new ImageIcon(icon.getImage().getScaledInstance(375, 100, Image.SCALE_SMOOTH)));
         
         jb_login.setBounds(10, 220, 375, 40);
@@ -69,7 +69,7 @@ class Login extends JFrame {
                 String usuario = jt_user.getText();
                 jt_user.setText("");
                 
-                int port = jt_parseInt(jt_port.getText());
+                int port = Integer.parseInt(jt_port.getText());
                 jt_port.setText("");
 
                 Socket connection = new Socket(Server.HOST, Server.PORT);
@@ -84,7 +84,7 @@ class Login extends JFrame {
                     JOptionPane.showMessageDialog(null, "Esse usuário/porta já está em uso!");
                 }
             } catch(IOException ex) {
-                JOptionPane.showMessageDialog(null, "Erro ao conectar. Verifique se o SERVER está em execução!");
+                JOptionPane.showMessageDialog(null, "Erro ao conectar. Verifique se o servidor está em execução!");
             }
         }); 
     }
