@@ -1,5 +1,11 @@
+package client;
+
+import common.Utils;
 import java.awt.*;
+import java.io.IOException;
+import java.net.Socket;
 import javax.swing.*;
+import server.Server;
 
 class Login extends JFrame {
     
@@ -58,7 +64,29 @@ class Login extends JFrame {
     }
     
     private void insertActions() {
-        
+        jb_login.addActionListener(event -> {
+            try {
+                String usuario = jt_user.getText();
+                jt_user.setText("");
+                
+                int port = jt_parseInt(jt_port.getText());
+                jt_port.setText("");
+
+                Socket connection = new Socket(Server.HOST, Server.PORT);
+                
+                String connection_info = (usuario + ":" + connection.getLocalAddress().getHostAddress() + ":" + port);
+                Utils.sendMessage(connection, connection_info);
+
+                if(Utils.receiveMessage(connection).equals("SUCCESS!!!")) {
+                    new Home(connection, connection_info);
+                    this.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Esse usuário/porta já está em uso!");
+                }
+            } catch(IOException ex) {
+                JOptionPane.showMessageDialog(null, "Erro ao conectar. Verifique se o SERVER está em execução!");
+            }
+        }); 
     }
     
     private void start() {

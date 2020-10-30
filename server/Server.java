@@ -1,10 +1,11 @@
+package server;
+
+import common.Utils;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-
-import common.Utils;
 
 public class Server {
 

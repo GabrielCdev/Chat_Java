@@ -1,16 +1,21 @@
-import java.awt.*;
+package client;
+
 import javax.swing.*;
+import java.awt.*;
+import java.net.Socket;
 
 public class Home extends JFrame {
 
     private String connection_info;
+    private Socket connection;
     private JLabel jl_title;
     private JButton jb_get_connected, jb_start_talk;
     private JList jlist;
     private JScrollPane scroll;
 
-    public Home(String connection_info) {
+    public Home(Socket connection, String connection_info) {
         super("Bate-Papo: Home");
+        this.connection = connection;
         this.connection_info = connection_info;
         initComponents();
         configComponents();
@@ -68,7 +73,8 @@ public class Home extends JFrame {
         this.setVisible(true);
     }
     
-    public static void main(String[] args) {
-        Home home = new Home("Gabriel:127.0.0.1:3000");
-    }
+    // Verificar se está rodando.
+    // public static void main(String[] args) {
+    //     Home home = new Home("Gabriel:127.0.0.1:3000");
+    // }
 }
