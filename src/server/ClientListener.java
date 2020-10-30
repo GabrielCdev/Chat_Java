@@ -4,19 +4,22 @@ import common.Utils;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import server.Server;
 
 public class ClientListener implements Runnable {
 
-    private String connection_info;
-    private Socket connection;
-    private Server server;
     private boolean running;
+    private Socket socket;
+    private String nickname;
+    private Server server;
 
-    public ClientListener(String connection_info, Socket connection, Server server) {
-        this.connection_info = connection_info;
-        this.connection = connection;
+    public ClientListener(String nickname, Socket socket, Server server) {
         this.server = server;
-        this.running = false;
+        running = false;
+        this.socket = socket;
+        this.nickname = nickname;
     }
 
     public boolean isRunning() {
@@ -26,35 +29,36 @@ public class ClientListener implements Runnable {
     public void setRunning(boolean running) {
         this.running = running;
     }
-    
+
     @Override
     public void run() {
         running = true;
         String message;
         
-        while(running) {
-            message = Utils.receiveMessage(connection);
+        while (running) {
+            message = Utils.receiveMessage(socket);
             
-            if(message.equals("QUIT")) {
-                server.getClients().remove(connection_info);
+            if (message.toLowerCase().equals("quit")) {
+                server.getClientes().remove(nickname);
+                
                 try {
-                    connection.close();
-                } catch(IOException ex) {
-                    System.out.println("[ClientListener:Run] -> " + ex.getMessage());
+                    socket.close();
+                } catch (IOException ex) {
+                    System.err.println("[ClientListener:Run] -> " + ex.getMessage());
                 }
                 running = false;
-            } else if(message.equals("GET_CONNECTED_USERS")) {
-                System.out.println("Atualize a lista de contatos...");
+            } else if (message.equals("GET_CONNECTED_USERS")) {
+                System.out.println("Solicitação de atualizar lista de contatos...");
                 String response = "";
                 
-                for(Map.Entry<String, ClientListener> pair : server.getClients().entrySet()) {
+                for (Map.Entry<String, ClientListener> pair : server.getClientes().entrySet()) {
                     response += (pair.getKey() + ";");
                 }
-
-                Utils.sendMessage(connection, response);
-            } else {
-                System.out.println("Recebido: " + message);
+                
+                Utils.sendMessage(socket, response);
             }
+            System.out.println(" >> Mensagem: " + message);
         }
     }
+
 }

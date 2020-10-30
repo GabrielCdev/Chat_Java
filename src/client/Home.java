@@ -1,64 +1,73 @@
 package client;
 
+import common.GUI;
 import common.Utils;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import server.Server;
 
-public class Home extends JFrame {
+public class Home extends GUI {
 
-    private ArrayList<String> opened_chats;
-    private Map<String, ClientListener> connected_listeners;
-    private ArrayList<String> connected_users;
-    private String connection_info;
-    private Socket connection;
+    private JLabel title;
     private ServerSocket server;
-    private boolean running;
-    
-    private JLabel jl_title;
+    private final Socket connection;
+    private final String connection_info;
     private JButton jb_get_connected, jb_start_talk;
     private JList jlist;
     private JScrollPane scroll;
 
+    private ArrayList<String> connected_users;
+    private ArrayList<String> opened_chats;
+    private Map<String, ClientListener> connected_listeners;
+
     public Home(Socket connection, String connection_info) {
-        super("Bate-Papo: Home");
+        super("Chat - Home");
+        title.setText("< Usuário : " + connection_info.split(":")[0] + " >");
         this.connection = connection;
+        this.setTitle("Home - " + connection_info.split(":")[0]);
         this.connection_info = connection_info;
-        initComponents();
-        configComponents();
-        insertComponents();
-        insertActions();
-        start();
+        connected_users = new ArrayList<String>();
+        opened_chats = new ArrayList<String>();
+        connected_listeners = new HashMap<String, ClientListener>();
+        startServer(this, Integer.parseInt(connection_info.split(":")[2]));
     }
 
-    private void initComponents() {
-        running = false;
-        server = null;
-        connected_listeners = new HashMap<String, ClientListener>();
-        opened_chats = new ArrayList<String>();
-        connected_users = new ArrayList<String>();
-        jl_title = new JLabel("< Usuario : " + connection_info.split(":")[0] + " >");
-        jb_get_connected = new JButton("Atualizar Contatos");
-        jb_start_talk = new JButton("Iniciar Conversa");
+    @Override
+    protected void initComponents() {
+        title = new JLabel();
+        jb_get_connected = new JButton("Atualizar lista de contatos");
         jlist = new JList();
         scroll = new JScrollPane(jlist);
+        jb_start_talk = new JButton("Iniciar Conversa");
     }
-    
-    private void configComponents() {
+
+    @Override
+    protected void configComponents() {
         this.setLayout(null);
         this.setMinimumSize(new Dimension(600, 480));
         this.setResizable(false);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.getContentPane().setBackground(Color.WHITE);
 
-        jl_title.setBounds(10, 10, 370, 40);
-        jl_title.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        title.setBounds(10, 10, 370, 40);
+        title.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
         jb_get_connected.setBounds(400, 10, 180, 40);
         jb_get_connected.setFocusable(false);
@@ -66,7 +75,7 @@ public class Home extends JFrame {
         jb_start_talk.setBounds(10, 400, 575, 40);
         jb_start_talk.setFocusable(false);
 
-        jlist.setBorder(BorderFactory.createTitledBorder("Usuarios Online"));
+        jlist.setBorder(BorderFactory.createTitledBorder("Usuários online"));
         jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         scroll.setBounds(10, 60, 575, 335);
@@ -75,14 +84,16 @@ public class Home extends JFrame {
         scroll.setBorder(null);
     }
 
-    private void insertComponents() {
-        this.add(jl_title);
+    @Override
+    protected void insertComponents() {
+        this.add(title);
         this.add(jb_get_connected);
         this.add(scroll);
         this.add(jb_start_talk);
     }
-    
-    private void insertActions() {
+
+    @Override
+    protected void insertActions() {
         this.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -90,9 +101,8 @@ public class Home extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                running = false;
+                System.out.println("Conexão encerrada...");
                 Utils.sendMessage(connection, "QUIT");
-                System.out.println("> Conexão encerrada!");
             }
 
             @Override
@@ -115,90 +125,83 @@ public class Home extends JFrame {
             public void windowDeactivated(WindowEvent e) {
             }
         });
+        
         jb_get_connected.addActionListener(event -> getConnectedUsers());
         jb_start_talk.addActionListener(event -> openChat());
     }
-    
-    private void start() {
+
+    @Override
+    protected void start() {
         this.pack();
         this.setVisible(true);
-        startServer(this, Integer.parseInt(connection_info.split(":")[2]));
     }
-    
-    // Verificar se está rodando.
-    // public static void main(String[] args) {
-    //     Home home = new Home("Gabriel:127.0.0.1:3000");
-    // }
-    
+
     private void getConnectedUsers() {
         Utils.sendMessage(connection, "GET_CONNECTED_USERS");
         String response = Utils.receiveMessage(connection);
         jlist.removeAll();
         connected_users.clear();
         
-        for(String info : response.split(";")) {
-            if(!info.equals(connection_info)) {
-                connected_users.add(info);
+        for (String user : response.split(";")) {
+            if (!user.equals(connection_info)) {
+                connected_users.add(user);
             }
         }
         jlist.setListData(connected_users.toArray());
     }
 
-    public ArrayList<String> getOpened_chats() {
-        return opened_chats;
+    private void openChat() {
+        int index = jlist.getSelectedIndex();
+        
+        if (index != -1) {
+            String value = jlist.getSelectedValue().toString();
+            String[] splited = value.split(":");
+            
+            if (!opened_chats.contains(value)) {
+                try {
+                    Socket socket = new Socket(splited[1], Integer.parseInt(splited[2]));
+                    Utils.sendMessage(socket, "OPEN_CHAT;" + connection_info);
+                    ClientListener cl = new ClientListener(this, socket);
+                    cl.setChat(new Chat(this, socket, value, this.connection_info.split(":")[0]));
+                    cl.setChatOpen(true);
+                    connected_listeners.put(value, cl);
+                    opened_chats.add(value);
+                    new Thread(cl).start();
+
+                } catch (IOException ex) {
+                }
+            }
+        }
     }
 
-    public Map<String, ClientListener> getConnected_listeners() {
-        return connected_listeners;
+    private void startServer(Home home, int port) {
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    server = new ServerSocket(port);
+                    System.out.println("Servidor cliente iniciado na porta " + port + " ...");
+                    while (true) {
+                        Socket client = server.accept();
+                        ClientListener cl = new ClientListener(home, client);
+                        new Thread(cl).start();
+                    }
+                } catch (IOException ex) {
+                    System.err.println("[ERROR:startServer] -> " + ex.getMessage());
+                }
+            }
+        }.start();
+    }
+    
+    public ArrayList<String> getOpened_chats() {
+        return opened_chats;
     }
 
     public String getConnection_info() {
         return connection_info;
     }
-    
-    private void openChat() {
-        int index = jlist.getSelectedIndex();
-        
-        if(index != -1) {
-            String connection_info = jlist.getSelectedValue().toString();
-            String[] splited = connection_info.split(":");
-            
-            if(!opened_chats.contains(connection_info)) {
-                try {
-                    Socket connection = new Socket(splited[1], Integer.parseInt(splited[2]));
-                    Utils.sendMessage(connection, "OPEN CHAT;" + this.connection_info);
-                    ClientListener cl = new ClientListener(this, connection);
-                    cl.setChat(new Chat(this, connection, connection_info, this.connection_info.split(":")[0]));
-                    cl.setChatOpen(true);
-                    connected_listeners.put(connection_info, cl);
-                    opened_chats.add(connection_info);
-                    new Thread(cl).start();
-                } catch(IOException ex) {
-                    System.err.println("[Home:openChat] -> " + ex.getMessage());
-                }
-            }
-        }
-    }
-    
-    private void startServer(Home home, int port) {
-        new Thread() {
-            @Override
-            public void run() {
-                running = true;
-                
-                try {
-                    server = new ServerSocket(port);
-                    System.out.println("Servidor cliente iniciado na porta: " + port + "...");
-                    
-                    while(running) {
-                        Socket connection = server.accept();
-                        ClientListener cl = new ClientListener(home, connection);
-                        new Thread(cl).start();
-                    }
-                } catch(IOException ex) {
-                    System.err.println("[Home:startServer] -> " + ex.getMessage());
-                }
-            }
-        }.start();
+
+    public Map<String, ClientListener> getConnected_listeners() {
+        return connected_listeners;
     }
 }

@@ -1,5 +1,6 @@
 package client;
 
+import common.GUI;
 import common.Utils;
 import javax.swing.*;
 import java.util.*;
@@ -9,7 +10,7 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-public class Chat extends JFrame {
+public class Chat extends GUI {
 
     private JLabel jl_title;
     private JEditorPane messages;
@@ -18,34 +19,33 @@ public class Chat extends JFrame {
     private JPanel panel;
     private JScrollPane scroll;
 
+    private ArrayList<String> message_list;
     private Home home;
     private Socket connection;
     private String connection_info;
-    private ArrayList<String> message_list;
-    
+
     public Chat(Home home, Socket connection, String connection_info, String title) {
-        super(title);
+        super("Chat " + title);
         this.home = home;
-        this.connection = connection;
         this.connection_info = connection_info;
-        initComponents();
-        configComponents();
-        insertComponents();
-        insertActions();
-        start();
+        message_list = new ArrayList<String>();
+        this.connection = connection;
+        this.jl_title.setText(connection_info.split(":")[0]);
+        this.jl_title.setHorizontalAlignment(SwingConstants.CENTER);
     }
 
-    private void initComponents() {
-        message_list = new ArrayList<String>();
-        jl_title = new JLabel(connection_info.split(":")[0], SwingConstants.CENTER);
+    @Override
+    protected void initComponents() {
+        jl_title = new JLabel();
         messages = new JEditorPane();
         scroll = new JScrollPane(messages);
         jt_message = new JTextField();
         jb_message = new JButton("Enviar");
-        panel = new JPanel(new BorderLayout());        
+        panel = new JPanel(new BorderLayout());
     }
-    
-    private void configComponents() {
+
+    @Override
+    protected void configComponents() {
         this.setMinimumSize(new Dimension(480, 720));
         this.setLayout(new BorderLayout());
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -56,34 +56,36 @@ public class Chat extends JFrame {
         jb_message.setSize(100, 40);
     }
 
-    private void insertComponents() {
+    @Override
+    protected void insertComponents() {
         this.add(jl_title, BorderLayout.NORTH);
         this.add(scroll, BorderLayout.CENTER);
         this.add(panel, BorderLayout.SOUTH);
         panel.add(jt_message, BorderLayout.CENTER);
         panel.add(jb_message, BorderLayout.EAST);
     }
-    
-    private void insertActions() {
-        jb_message.addActionListener(event -> send());
-        jt_message.addKeyListener(new KeyListener() {  
+
+    @Override
+    protected void insertActions() {
+        jt_message.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
-
             }
-            
+
             @Override
             public void keyPressed(KeyEvent e) {
-                if(e.getKeyChar() == KeyEvent.VK_ENTER) {
+                if (e.getKeyChar() == KeyEvent.VK_ENTER) {
                     send();
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                
             }
         });
+        
+        jb_message.addActionListener(event -> send());
+        
         this.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -117,7 +119,6 @@ public class Chat extends JFrame {
             @Override
             public void windowDeactivated(WindowEvent e) {
             }
-            
         });
     }
 
@@ -125,29 +126,30 @@ public class Chat extends JFrame {
         message_list.add(received);
         String message = "";
 
-        for(String str : message_list) {
+        for (String str : message_list) {
             message += str;
         }
         
         messages.setText(message);
     }
 
-    private void send() {
-        if(jt_message.getText().length() > 0) {
-            DateFormat df = new SimpleDateFormat("hh:mm:ss");
-            Utils.sendMessage(connection, "MESSAGE;" + "<b>[" + df.format(new Date()) + "] " + this.getTitle() + ": </b><i>" + jt_message.getText() + "</i><br>");
-            append_message("<b>[" + df.format(new Date()) + "] Eu: </b><i>" + jt_message.getText() + "</i><br>");
-            jt_message.setText("");
-        }
-    }
-    
-    private void start() {
+    @Override
+    protected void start() {
         this.pack();
         this.setVisible(true);
     }
 
-    // Teste de funcionamento
-    // public static void main(String[] args) {
-    //    Chat chat = new Chat("Gabriel:127.0.0.1:3000", "Inaldo");
-    // }
+    private void send() {
+        DateFormat df = new SimpleDateFormat("hh:mm:ss");
+        message_list.add("<b>[" + df.format(new Date()) + "] Eu: </b><i>" + jt_message.getText() + "</i><br>");
+        Utils.sendMessage(connection, "MESSAGE;<b>[" + df.format(new Date()) + "] " + home.getConnection_info().split(":")[0] + ": </b><i>" + jt_message.getText() + "</i><br>");
+        String message = "";
+        
+        for (String str : message_list) {
+            message += str;
+        }
+        
+        messages.setText(message);
+        jt_message.setText("");
+    }
 }
