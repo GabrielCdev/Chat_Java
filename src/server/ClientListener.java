@@ -1,6 +1,7 @@
 package server;
 
 import common.Utils;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ public class ClientListener implements Runnable {
         this.running = running;
     }
     
+    @Override
     public void run() {
         running = true;
         String message;
@@ -34,6 +36,12 @@ public class ClientListener implements Runnable {
             message = Utils.receiveMessage(connection);
             
             if(message.equals("QUIT")) {
+                server.getClients().remove(connection_info);
+                try {
+                    connection.close();
+                } catch(IOException ex) {
+                    System.out.println("[ClientListener:Run] -> " + ex.getMessage());
+                }
                 running = false;
             } else if(message.equals("GET_CONNECTED_USERS")) {
                 System.out.println("Atualize a lista de contatos...");

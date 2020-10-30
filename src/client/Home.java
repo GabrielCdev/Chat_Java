@@ -1,11 +1,15 @@
 package client;
 
+import common.Utils;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Home extends JFrame {
 
+    private ArrayList<String> connected_users;
     private String connection_info;
     private Socket connection;
     private JLabel jl_title;
@@ -25,6 +29,7 @@ public class Home extends JFrame {
     }
 
     private void initComponents() {
+        connected_users = new ArrayList<String>();
         jl_title = new JLabel("< Usuario : " + connection_info.split(":")[0] + " >");
         jb_get_connected = new JButton("Atualizar Contatos");
         jb_start_talk = new JButton("Iniciar Conversa");
@@ -65,7 +70,38 @@ public class Home extends JFrame {
     }
     
     private void insertActions() {
-        
+        this.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                Utils.sendMessage(connection, "QUIT");
+                System.out.println("> Conexão encerrada!");
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+            }
+        });
+        jb_get_connected.addActionListener(event -> getConnectedUsers());
     }
     
     private void start() {
@@ -77,4 +113,18 @@ public class Home extends JFrame {
     // public static void main(String[] args) {
     //     Home home = new Home("Gabriel:127.0.0.1:3000");
     // }
+    
+    private void getConnectedUsers() {
+        Utils.sendMessage(connection, "GET_CONNECTED_USERS");
+        String response = Utils.receiveMessage(connection);
+        jlist.removeAll();
+        connected_users.clear();
+        
+        for(String info : response.split(";")) {
+            if(!info.equals(connection_info)) {
+                connected_users.add(info);
+            }
+        }
+        jlist.setListData(connected_users.toArray());
+    }
 }
