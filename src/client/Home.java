@@ -172,6 +172,7 @@ public class Home extends JFrame {
                     cl.setChatOpen(true);
                     connected_listeners.put(connection_info, cl);
                     opened_chats.add(connection_info);
+                    new Thread(cl).start();
                 } catch(IOException ex) {
                     System.err.println("[Home:openChat] -> " + ex.getMessage());
                 }

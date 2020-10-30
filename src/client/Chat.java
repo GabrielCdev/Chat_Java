@@ -24,7 +24,7 @@ public class Chat extends JFrame {
     private ArrayList<String> message_list;
     
     public Chat(Home home, Socket connection, String connection_info, String title) {
-        super("Bate-Papo " + title);
+        super(title);
         this.home = home;
         this.connection = connection;
         this.connection_info = connection_info;
@@ -93,7 +93,7 @@ public class Chat extends JFrame {
             public void windowClosing(WindowEvent e) {
                 Utils.sendMessage(connection, "CHAT_CLOSE");
                 home.getOpened_chats().remove(connection_info);
-                home.getConnected_listeners().remove(connection_info).setChatOpen(false);
+                home.getConnected_listeners().get(connection_info).setChatOpen(false);
                 home.getConnected_listeners().get(connection_info).setRunning(false);
                 home.getConnected_listeners().remove(connection_info);
             }
@@ -135,7 +135,7 @@ public class Chat extends JFrame {
     private void send() {
         if(jt_message.getText().length() > 0) {
             DateFormat df = new SimpleDateFormat("hh:mm:ss");
-            Utils.sendMessage(connection, "MESSAGE;" + "<b>[" + df.format(new Date()) + "] " + connection_info.split(":")[0] +  ": </b><i>" + jt_message.getText() + "</i><br>");
+            Utils.sendMessage(connection, "MESSAGE;" + "<b>[" + df.format(new Date()) + "] " + this.getTitle() + ": </b><i>" + jt_message.getText() + "</i><br>");
             append_message("<b>[" + df.format(new Date()) + "] Eu: </b><i>" + jt_message.getText() + "</i><br>");
             jt_message.setText("");
         }
