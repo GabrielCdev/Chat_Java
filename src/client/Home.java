@@ -4,14 +4,23 @@ import common.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Home extends JFrame {
 
+    private ArrayList<String> opened_chats;
+    private Map<String, ClientListener> connected_listeners;
     private ArrayList<String> connected_users;
     private String connection_info;
     private Socket connection;
+    private ServerSocket server;
+    private boolean running;
+    
     private JLabel jl_title;
     private JButton jb_get_connected, jb_start_talk;
     private JList jlist;
@@ -29,6 +38,10 @@ public class Home extends JFrame {
     }
 
     private void initComponents() {
+        running = false;
+        server = null;
+        connected_listeners = new HashMap<String, ClientListener>();
+        opened_chats = new ArrayList<String>();
         connected_users = new ArrayList<String>();
         jl_title = new JLabel("< Usuario : " + connection_info.split(":")[0] + " >");
         jb_get_connected = new JButton("Atualizar Contatos");
@@ -77,6 +90,7 @@ public class Home extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
+                running = false;
                 Utils.sendMessage(connection, "QUIT");
                 System.out.println("> Conexão encerrada!");
             }
@@ -102,11 +116,13 @@ public class Home extends JFrame {
             }
         });
         jb_get_connected.addActionListener(event -> getConnectedUsers());
+        jb_start_talk.addActionListener(event -> openChat());
     }
     
     private void start() {
         this.pack();
         this.setVisible(true);
+        startServer(this, Integer.parseInt(connection_info.split(":")[2]));
     }
     
     // Verificar se está rodando.
@@ -126,5 +142,62 @@ public class Home extends JFrame {
             }
         }
         jlist.setListData(connected_users.toArray());
+    }
+
+    public ArrayList<String> getOpened_chats() {
+        return opened_chats;
+    }
+
+    public Map<String, ClientListener> getConnected_listeners() {
+        return connected_listeners;
+    }
+
+    public String getConnection_info() {
+        return connection_info;
+    }
+    
+    private void openChat() {
+        int index = jlist.getSelectedIndex();
+        
+        if(index != -1) {
+            String connection_info = jlist.getSelectedValue().toString();
+            String[] splited = connection_info.split(":");
+            
+            if(!opened_chats.contains(connection_info)) {
+                try {
+                    Socket connection = new Socket(splited[1], Integer.parseInt(splited[2]));
+                    Utils.sendMessage(connection, "OPEN CHAT!" + this.connection_info);
+                    ClientListener cl = new ClientListener(this, connection);
+                    cl.setChat(new Chat(this, connection, connection_info, this.connection_info.split(":")[0]));
+                    cl.setChatOpen(true);
+                    connected_listeners.put(connection_info, cl);
+                    opened_chats.add(connection_info);
+                } catch(IOException ex) {
+                    System.err.println("[Home:openChat] -> " + ex.getMessage());
+                }
+            }
+        }
+    }
+    
+    private void startServer(Home home, int port) {
+        new Thread() {
+            @Override
+            public void run() {
+                running = true;
+                
+                try {
+                    server = new ServerSocket(port);
+                    System.out.println("Servidor cliente iniciado na porta: " + port + "...");
+                    
+                    while(running) {
+                        Socket connection = server.accept();
+                        ClientListener cl = new ClientListener(home, connection);
+                        new Thread(cl).start();
+                    }
+                } catch(IOException ex) {
+                    System.err.println("[Home:startServer] -> " + ex.getMessage());
+                }
+            }
+        }.start();
     }
 }

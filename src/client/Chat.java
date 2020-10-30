@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -16,11 +17,15 @@ public class Chat extends JFrame {
     private JPanel panel;
     private JScrollPane scroll;
 
+    private Home home;
+    private Socket connection;
     private String connection_info;
     private ArrayList<String> message_list;
     
-    public Chat(String connection_info, String title) {
+    public Chat(Home home, Socket connection, String connection_info, String title) {
         super("Bate-Papo " + title);
+        this.home = home;
+        this.connection = connection;
         this.connection_info = connection_info;
         initComponents();
         configComponents();
@@ -101,7 +106,8 @@ public class Chat extends JFrame {
         this.setVisible(true);
     }
 
-    public static void main(String[] args) {
-        Chat chat = new Chat("Gabriel:127.0.0.1:3000", "Inaldo");
-    }
+    // Teste de funcionamento
+    // public static void main(String[] args) {
+    //    Chat chat = new Chat("Gabriel:127.0.0.1:3000", "Inaldo");
+    // }
 }
