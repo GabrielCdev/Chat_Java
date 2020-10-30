@@ -1,4 +1,5 @@
 import java.net.Socket;
+import java.util.Map;
 
 public class ClientListener implements Runnable {
 
@@ -27,38 +28,21 @@ public class ClientListener implements Runnable {
         String message;
         
         while(running) {
-            message = Utils.receiveMessage(socket);
+            message = Utils.receiveMessage(connection);
             
-            if(message == null || message.equals("CHAT_CLOSE")) {
-                if(chatOpen) {
-                    home.getOpened_chats().remove(connection_info);
-                    home.getConnected_listeners().remove(connection_info);
-                    chatOpen = false;
-
-                    try {
-                        socket.close();
-                    } catch(IOException ex) {
-                        System.err.println("[ClientListener:run] -> " + ex.getMessage());
-                    }
-                    chat.dispose();
-                }
+            if(message.equals("QUIT")) {
                 running = false;
-            } else {
-                String[] fields = message.split(";");
-
-                if(fields.length > 1) {
-                    String[] splited = fields[1].split(":");
-                    connection_info = fields[1];
-                    
-                    if(!chatOpen) {
-                        home.getOpened_chats().add(connection_info);
-                        home.getConnected_listeners().put(connection_info, this);
-                        chatOpen = true;
-                        chat = new Chat(home, socket, connection_info, home.getConnection_info().split(":")[0]);
-                    }                    
-                } else if(fields[0].equals("MESSAGE")) {
-                    chat.append_message(fields[1]);
+            } else if(message.equals("GET_CONNECTED_USERS")) {
+                System.out.println("Atualize a lista de contatos...");
+                String response = "";
+                
+                for(Map<K, V>.Entry<String, ClientListener> pair: server.getClients().entrySet()) {
+                    response += (pair.getKey() + ";");
                 }
+
+                Utils.send(connection, response);
+            } else {
+                System.out.println("Recebido: " + message);
             }
         }
     }

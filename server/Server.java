@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyStore.Entry;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +38,10 @@ public class Server {
         } catch(IOException ex) {
             System.err.println("[ERROR:Server] -> " + ex.getMessage());
         }
+    }
+
+    public Map<String, ClientListener> getClients() {
+        return clients;
     }
 
     private boolean checkLogin(String connection_info) {
